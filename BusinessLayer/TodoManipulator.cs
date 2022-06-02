@@ -13,7 +13,6 @@ namespace TodoApi.BusinessLayer
     {
         private readonly TodoContext _context;
 
-
         public TodoManipulator(TodoContext context)
         {
             _context = context;
@@ -35,7 +34,7 @@ namespace TodoApi.BusinessLayer
         {
             var todoItem = await GetTodoItem(id);
             if (todoItem == null)
-            { 
+            {
                 return null; 
             }
 
@@ -48,6 +47,7 @@ namespace TodoApi.BusinessLayer
             var todoItem = await GetTodoItem(id);
             if (todoItem == null)
             {
+                Log.Instance.Info(this, $"Failed to find Todo Item with ID({id})");
                 return null;
             }
 
@@ -58,8 +58,10 @@ namespace TodoApi.BusinessLayer
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException) when (!TodoItemExists(id))
+            catch (DbUpdateConcurrencyException e) when (!TodoItemExists(id))
             {
+                Log.Instance.Error(this, $"Failed to update DB");
+                Log.Instance.Error(this, e);
                 return null;
             }
 
@@ -78,6 +80,7 @@ namespace TodoApi.BusinessLayer
             await _context.SaveChangesAsync();
 
             var todoDto = ItemToDTO(todoItem);
+            Log.Instance.Info(this, $"Todo Item with ID ({todoItem.Id}) has been created");
             return todoDto;
         }
 
@@ -87,6 +90,7 @@ namespace TodoApi.BusinessLayer
 
             if (todoItem == null)
             {
+                Log.Instance.Info(this, $"Failed to find Todo Item with ID({id})");
                 return false;
             }
 
@@ -122,8 +126,5 @@ namespace TodoApi.BusinessLayer
         }
 
         private bool TodoItemExists(long id) => _context.TodoItems.Any(e => e.Id == id);
-
-
-
     }
 }
